@@ -15,7 +15,7 @@ struct FullScreenPhotoView: View {
     var photoUrl: URL
     var body: some View {
         GeometryReader { proxy in
-            VStack(alignment: .leading, content: {
+            VStack(alignment: .trailing, content: {
                 Spacer()
                 Button(action: {
                     isSharePresented = true
