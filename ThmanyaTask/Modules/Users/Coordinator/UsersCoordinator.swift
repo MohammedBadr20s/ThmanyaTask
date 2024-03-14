@@ -1,5 +1,5 @@
 //
-//  HomeCoordinator.swift
+//  UsersCoordinator.swift
 //  ThmanyaTask
 //
 //  Created by Mohammedbadr on 3/13/24.
@@ -7,7 +7,7 @@
 
 import UIKit
 
-class HomeCoordinator: Coordinator {
+class UsersCoordinator: Coordinator {
     var childCoordinalors: [Coordinator] = []
     var navigationController: UINavigationController
     required init(navigationController: UINavigationController) {
@@ -24,11 +24,11 @@ class HomeCoordinator: Coordinator {
     }
 }
 
-extension HomeCoordinator: HomeNavigationDelegate {
-    func navigateToAlbumDetails(id: String) {
-        let coordinator = AlbumDetailsCoordinator(navigationController: self.navigationController)
+extension UsersCoordinator: UsersNavigationDelegate {
+    func navigateToUserAlbums(user: UsersResponse) {
+        let coordinator = AlbumsCoordinator(navigationController: self.navigationController)
         self.childCoordinalors.append(coordinator)
-        coordinator.navigateToAlbumsDetails(id: id)
+        coordinator.navigateToAlbums(user: user)
     }
     
 }

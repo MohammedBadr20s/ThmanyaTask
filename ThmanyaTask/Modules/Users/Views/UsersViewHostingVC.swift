@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-protocol HomeNavigationDelegate: AnyObject {
-    func navigateToAlbumDetails(id: String)
+protocol UsersNavigationDelegate: AnyObject {
+    func navigateToUserAlbums(user: UsersResponse)
 }
 
 class UsersViewHostingVC: UIHostingController<UsersView> {

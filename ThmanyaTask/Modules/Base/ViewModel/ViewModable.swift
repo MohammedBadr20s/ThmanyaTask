@@ -6,3 +6,14 @@
 //
 
 import Foundation
+import Combine
+
+enum LoadingState {
+    case loading
+    case populated
+    case error(Error)
+}
+
+protocol ViewModable {
+    var cancellables: Set<AnyCancellable> { get set }
+}

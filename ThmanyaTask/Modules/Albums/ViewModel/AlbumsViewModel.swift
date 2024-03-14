@@ -16,13 +16,12 @@ class AlbumsViewModel: ViewModable, ObservableObject, NavigationProtocol {
     @Published var albums: [AlbumsResponse] = []
     @Published var loadingState: LoadingState = .loading
     
-    
+    // This is done only for SwiftUI Preview to work
     init() {
         self.navigationDelegate = nil
         self.backDelegate = nil
         self.cancellables = Set<AnyCancellable>()
         self.user = nil
-        //        assertionFailure("This is used only to enable previews and shouldn't be used in normal cases")
     }
     
     init(

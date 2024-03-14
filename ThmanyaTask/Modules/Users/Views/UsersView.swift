@@ -16,27 +16,37 @@ struct UsersView: View {
                 debugPrint("Action On Scroll")
             } content: {
                 VStack(alignment: .leading, spacing: 10, content: {
-                    Text("Profile")
+                    Text("Users")
                         .font(FontFactory.swiftUIFont(.sansArabic, .bold, 32))
-                    Text("Leanne Graham")
-                    Text("Leanne GrahamLeanne GrahamLeanne GrahamLeanne GrahamLeanne GrahamLeanne Graham")
-                    Text("My Albums")
-                    ForEach(viewModel.albums, id: \.self) { item in
-                        VStack(alignment: .leading, spacing: 10, content: {
-                            Text(item)
-                            Divider()
-                        })
-                        .onTapGesture {
-                            viewModel.navigationDelegate?.navigateToAlbumDetails(id: item)
-                        }
-                    }
-                   
+                    switch viewModel.loadingState {
+                    case .loading:
+                        ProgressView()
+                              .progressViewStyle(CircularProgressViewStyle(tint: .blue))
+                              .scaleEffect(2.0, anchor: .center) // Makes the spinner larger
+                              .frame(width: reader.size.width, height: 150)
+                    case .populated:
+                        UsersList(viewModel: viewModel)
 
-                   
+                    case .error(let error):
+                        VStack(content: {
+                            Text("Error: \(error.localizedDescription)")
+                            Button {
+                                Task(priority: .utility) {
+                                    await viewModel.getUsers()
+                                }
+                            } label: {
+                                Text("Try again")
+                                    .padding(.all, 20)
+                                    .frame(width: reader.size.width, height: 50)
+                                    .padding(.all, 20)
+                            }
+
+                        })
+                    }
+                    
                 })
                 .padding(.horizontal, 5)
                 .frame(width: reader.size.width, alignment: .leading)
-//                .background(.blue)
                 .clipShape(
                     RoundedRectangle(cornerRadius: 5)
                 )
@@ -47,6 +57,9 @@ struct UsersView: View {
         .padding(.horizontal, 2)
         .clipped()
         .ignoresSafeArea(.keyboard, edges: .bottom)
+        .task(priority: .utility) {
+            await viewModel.getUsers()
+        }
 
         
     }
@@ -54,4 +67,21 @@ struct UsersView: View {
 
 #Preview {
     UsersView(viewModel: UsersViewModel())
+}
+
+struct UsersList: View {
+    @ObservedObject var viewModel: UsersViewModel
+
+    var body: some View {
+        ForEach(viewModel.users, id: \.self) { item in
+            VStack(alignment: .leading, spacing: 10, content: {
+                Text(item.name ?? "")
+                Divider()
+            })
+            .contentShape(Rectangle())
+            .onTapGesture {
+                viewModel.navigationDelegate?.navigateToUserAlbums(user: item)
+            }
+        }
+    }
 }

@@ -10,11 +10,21 @@ import UIKit
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
-
+    var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        window = UIWindow(frame: UIScreen.main.bounds)
+        guard #available(iOS 13, *) else {
+            appLaunchScreen()
+            return true
+        }
         return true
+    }
+    
+    func appLaunchScreen() {
+        let nvc = UINavigationController()
+        BaseCoordinator(navigationController: nvc).navigate(window: window)
     }
 
     // MARK: UISceneSession Lifecycle

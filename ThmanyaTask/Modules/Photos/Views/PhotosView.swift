@@ -1,5 +1,5 @@
 //
-//  AlbumDetailsView.swift
+//  PhotosView.swift
 //  ThmanyaTask
 //
 //  Created by Mohammedbadr on 3/13/24.
@@ -8,8 +8,8 @@
 import SwiftUI
 import Kingfisher
 
-struct AlbumDetailsView: View {
-    @ObservedObject var viewModel: AlbumDetailsViewModel
+struct PhotosView: View {
+    @ObservedObject var viewModel: PhotosViewModel
     
     var body: some View {
         GeometryReader { reader in
@@ -17,7 +17,30 @@ struct AlbumDetailsView: View {
                 Text(viewModel.album.title ?? "")
                     .font(FontFactory.swiftUIFont(.sansArabic, .bold, 32))
                 SearchBar()
-                PhotosGridView(viewModel: viewModel, size: reader.size)
+                switch viewModel.loadingState {
+                case .loading:
+                    ProgressView()
+                          .progressViewStyle(CircularProgressViewStyle(tint: .blue))
+                          .scaleEffect(2.0, anchor: .center) // Makes the spinner larger
+                          .frame(width: reader.size.width, height: 150)
+                case .populated:
+                    PhotosGridView(viewModel: viewModel, size: reader.size)
+                case .error(let error):
+                    VStack(content: {
+                        Text("Error: \(error.localizedDescription)")
+                        Button {
+                            Task(priority: .utility) {
+                                await viewModel.getPhotos()
+                            }
+                        } label: {
+                            Text("Try again")
+                                .padding(.all, 20)
+                                .frame(width: reader.size.width, height: 50)
+                                .padding(.all, 20)
+                        }
+
+                    })
+                }
                 
             })
             
@@ -60,11 +83,11 @@ struct AlbumDetailsView: View {
 }
 
 #Preview {
-    AlbumDetailsView(viewModel: AlbumDetailsViewModel(album: AlbumsResponse(), navigationDelegate: nil, backDelegate: nil))
+    PhotosView(viewModel: PhotosViewModel(album: AlbumsResponse(), navigationDelegate: nil, backDelegate: nil))
 }
 
 struct PhotosGridView: View {
-    @ObservedObject var viewModel: AlbumDetailsViewModel
+    @ObservedObject var viewModel: PhotosViewModel
     var size: CGSize
     
     
@@ -72,11 +95,25 @@ struct PhotosGridView: View {
         BackwardCompatibleScrollView {
             debugPrint("Action On Scroll")
         } content: {
-            LazyVGrid(columns: Array(repeating: GridItem(.fixed(size.width / 3), spacing: 0), count: 3), spacing: 0) {
+            LazyVGrid(columns: Array(repeating: GridItem(.adaptive(minimum: size.width / 3, maximum: size.width / 3), spacing: 0), count: 3), spacing: 0) {
                 ForEach(viewModel.searchQuery.isEmpty ? viewModel.photos : viewModel.filteredPhotos, id: \.self) { item in
                     VStack(alignment: .center, spacing: 0, content: {
                         if let url = URL(string: item.thumbnailURL ?? ""){
                             KFImage(url)
+                                .placeholder{
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: Color.blue))
+                                        .scaleEffect(2.0, anchor: .center) // Makes the spinner larger
+                                        .frame(width: size.width, height: 150)
+                                }
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: size.width / 3)
+                                .clipped()
+                                .onTapGesture {
+                                    if let url = URL(string: item.url ?? "") {
+                                        viewModel.navigationDelegate?.presentFullScreenPhoto(url: url)
+                                    }
+                                }
                         } else {
                             Text("Thumbnail URL Invalid: \(item.thumbnailURL ?? "")")
                         }

@@ -13,7 +13,6 @@ class AlbumsCoordinator: Coordinator {
     required init(navigationController: UINavigationController) {
         self.navigationController = navigationController
     }
-    
     @discardableResult func start(backDelegate: BackDelegate?) -> UINavigationController {
         return navigationController
     }

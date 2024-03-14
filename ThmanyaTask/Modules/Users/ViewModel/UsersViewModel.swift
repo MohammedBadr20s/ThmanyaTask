@@ -9,21 +9,22 @@ import Combine
 
 
 class UsersViewModel: ViewModable, ObservableObject, NavigationProtocol {
-    var navigationDelegate: HomeNavigationDelegate?
+    var navigationDelegate: UsersNavigationDelegate?
     var backDelegate: BackDelegate?
     var cancellables = Set<AnyCancellable>()
     
-    @Published var albums: [String] = []
+    @MainActor @Published var users: [UsersResponse] = []
+    @Published var loadingState: LoadingState = .loading
     
-    
+    // This is done only for SwiftUI Preview to work
     init() {
         self.navigationDelegate = nil
         self.backDelegate = nil
         self.cancellables = Set<AnyCancellable>()
-//        assertionFailure("This is used only to enable previews and shouldn't be used in normal cases")
     }
+    
     init(
-        navigationDelegate: HomeNavigationDelegate,
+        navigationDelegate: UsersNavigationDelegate,
         backDelegate: BackDelegate,
         cancellables: Set<AnyCancellable> = Set<AnyCancellable>()) {
         self.navigationDelegate = navigationDelegate
@@ -32,12 +33,15 @@ class UsersViewModel: ViewModable, ObservableObject, NavigationProtocol {
     }
     
     
-    func getUsers() async {
+    @MainActor func getUsers() async {
+        loadingState = .loading
         do {
-            let users = try await UsersService.getUsers.Request(model: BaseModel<[String]>.self)
-            albums = users.data ?? []
+            let users = try await UsersService.getUsers.Request(model: [UsersResponse].self)
+            self.users = users
+            loadingState = .populated
         } catch let error {
-            debugPrint(error)
+            debugPrint("Error Log should be here with error: \(error)")
+            loadingState = .error(error)
         }
     }
 }

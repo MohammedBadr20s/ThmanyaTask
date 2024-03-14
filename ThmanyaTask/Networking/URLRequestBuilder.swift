@@ -1,6 +1,6 @@
 //
 //  URLRequestBuilder.swift
-//  TmanyaTask
+//  ThmanyaTask
 //
 //  Created by Mohammedbadr on 3/13/24.
 //
@@ -29,20 +29,17 @@ protocol URLRequestBuilder: URLRequestConvertible {
     
     var urlRequest: URLRequest { get }
     
-    func Request<T: BaseModelProtocol>(model: T.Type) -> Observable<T>
+    var analyticsName: String { get }
     
-    func Request<T: BaseModelProtocol>(model: T.Type, result: @escaping (_ result: T) -> Void, onError: @escaping (_ error: Error) -> Void)
+    func Request<T: Codable>(model: T.Type) async throws -> T
     
-    func handleError<T: BaseModelProtocol>(apiError: ApiError?, data: Any?, observer: AnyObserver<T>)
-    
-    func handleError(apiError: ApiError?, data: Any?, onError: @escaping (_ error: Error) -> Void)
 }
 
 
 extension URLRequestBuilder {
     
     var baseURL: String {
-        return Environment.current()?.rawValue ?? ServerPath.baseURL.rawValue
+        return Environment.current()?.rawValue ?? ServerEndpointsPath.baseURL.rawValue
     }
     
     var mainURL: URL {
@@ -70,14 +67,10 @@ extension URLRequestBuilder {
         }
     }
     var headers: HTTPHeaders {
-        var headers = [
+        let headers = [
             "Content-Type": "application/json",
-//            "Accept-Language": LocalizationHelper.getCurrentLanguage(),
             "Accept": "application/json",
         ]
-        if let token = Keychain.userToken {
-            headers["auth-token"] = "Bearer \(token)"
-        }
         return HTTPHeaders(headers)
     }
     
@@ -93,71 +86,12 @@ extension URLRequestBuilder {
     }
     
     //MARK:- API Request Function
-    func Request<T: BaseModelProtocol>(model: T.Type) -> Observable<T> {
-        return Observable.create { (observer: AnyObserver<T>) -> Disposable in
-            let manager = AF
-            manager.sessionConfiguration.timeoutIntervalForRequest = 60
-            manager.request(self).responseJSON { (response: AFDataResponse<Any>) in
-                response.interceptResuest("\(self.requestURL)", self.parameters)
-                
-                let resEnum = ResponseHandler.shared.handleResponse(response, model: model)
-                
-                switch resEnum {
-                case .failure(let error, let data):
-                    return handleError(apiError: error, data: data, observer: observer)
-                case .success(let value):
-                    if let model = value as? T {
-                        observer.onNext(model)
-                    }
-                }
-            }
-            return Disposables.create()
-        }
-    }
-    
-    func Request<T: BaseModelProtocol>(model: T.Type, result: @escaping (_ result: T) -> Void, onError: @escaping (_ error: Error) -> Void) {
+    func Request<T: Codable>(model: T.Type) async throws -> T {
         let manager = AF
         manager.sessionConfiguration.timeoutIntervalForRequest = 60
-        manager.request(self).responseJSON { (response: AFDataResponse<Any>) in
-            response.interceptResuest("\(self.requestURL)", self.parameters)
-            
-            let resEnum = ResponseHandler.shared.handleResponse(response, model: model)
-            
-            switch resEnum {
-            case .failure(let error, let data):
-                return handleError(apiError: error, data: data, onError: onError)
-            case .success(let value):
-                if let model = value as? T {
-                    result(model)
-                }
-            }
-        }
-    }
-    
-    //MARK:- Handle Error comes from Request Function
-    func handleError<T: BaseModelProtocol>(apiError: ApiError?, data: Any?, observer: AnyObserver<T>) {
-        if let error = data as? BaseErrorModel {
-            observer.onError(error)
-        } else if let apiError = apiError {
-            observer.onError(BaseErrorModel(statusCode: apiError.rawValue, errors: [DiarkoErrorResponse(msg: apiError.title)], isSuccess: false))
-        } else if let error = data as? [BaseErrorModel] {
-            let defaultError = BaseErrorModel(statusCode: apiError?.rawValue, errors: [DiarkoErrorResponse(msg: apiError?.title)], isSuccess: false)
-            observer.onError(error.first ?? defaultError)
-        }else {
-            let defaultError = BaseErrorModel(statusCode: apiError?.rawValue, errors: [DiarkoErrorResponse(msg: "404 Not Found")], isSuccess: false)
-            observer.onError(defaultError)
-        }
-    }
-    
-    func handleError(apiError: ApiError?, data: Any?, onError: @escaping (_ error: Error) -> Void) {
-        if let error = data as? BaseErrorModel {
-            onError(error)
-        } else if let apiError = apiError {
-            onError(BaseErrorModel(statusCode: apiError.rawValue, errors: [DiarkoErrorResponse(msg: apiError.title)], isSuccess: false))
-
-        } else if let error = data as? [BaseErrorModel] {
-            let defaultError = BaseErrorModel(statusCode: apiError?.rawValue, errors: [DiarkoErrorResponse(msg: apiError?.title)], isSuccess: false)
-            onError(error.first ?? defaultError)
-        }
+        let request =  manager.request(self).serializingDecodable(model.self, automaticallyCancelling: true)
+        await request.interceptResuest("\(requestURL)", parameters)
+        let value = try await request.value
+        return value
     }
 }

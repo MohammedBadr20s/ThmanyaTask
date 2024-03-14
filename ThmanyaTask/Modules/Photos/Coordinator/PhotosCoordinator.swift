@@ -20,16 +20,20 @@ class AlbumDetailsCoordinator: Coordinator {
     
     
     func navigateToAlbumsDetails(album: AlbumsResponse) {
-        let viewModel = AlbumDetailsViewModel(
+        let viewModel = PhotosViewModel(
             album: album,
             navigationDelegate: self,
             backDelegate: self)
-        let vc = AlbumDetailsHostingVC(viewModel: viewModel)
+        let vc = PhotosHostingVC(viewModel: viewModel)
         self.navigationController.pushViewController(vc, animated: true)
     }
     
 }
 
-extension AlbumDetailsCoordinator: AdlbumDetailsNavigationDelegate {
-    
+extension AlbumDetailsCoordinator: PhotosNavigationDelegate {
+    func presentFullScreenPhoto(url: URL) {
+        let vc = FullScreenPhotoHostingVC(photoUrl: url)
+        vc.modalPresentationStyle = .popover
+        self.navigationController.present(vc, animated: true)
+    }
 }

@@ -1,6 +1,6 @@
 //
 //  ServerEndpoints.swift
-//  TmanyaTask
+//  ThmanyaTask
 //
 //  Created by Mohammedbadr on 3/13/24.
 //
@@ -11,7 +11,7 @@ enum Environment: String {
     
     case Default = ""
     case Production = "Production URL"
-    case Staging = "https://api.dyarko.com"
+    case Staging = "https://jsonplaceholder.typicode.com"
     func changeTo() {
         UserDefaults.standard.setValue(self.rawValue, forKey: Constants.Environment.rawValue)
         UserDefaults.standard.synchronize()
@@ -22,6 +22,6 @@ enum Environment: String {
 }
 
 enum ServerEndpointsPath: String {
-    case baseURL = "https://api.dyarko.com"
+    case baseURL = "https://jsonplaceholder.typicode.com"
     
 }

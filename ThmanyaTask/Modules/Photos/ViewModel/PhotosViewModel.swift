@@ -1,5 +1,5 @@
 //
-//  AlbumDetailsViewModel.swift
+//  PhotosViewModel.swift
 //  ThmanyaTask
 //
 //  Created by Mohammedbadr on 3/13/24.
@@ -7,10 +7,10 @@
 
 import Combine
 
-class AlbumDetailsViewModel: ViewModable, NavigationProtocol, ObservableObject {
+class PhotosViewModel: ViewModable, NavigationProtocol, ObservableObject {
     var cancellables = Set<AnyCancellable>()
     var backDelegate: BackDelegate?
-    var navigationDelegate: AdlbumDetailsNavigationDelegate?
+    var navigationDelegate: PhotosNavigationDelegate?
     var album: AlbumsResponse
     @Published var photos: [PhotoResponse] = []
     @Published var filteredPhotos: [PhotoResponse] = []
@@ -19,7 +19,7 @@ class AlbumDetailsViewModel: ViewModable, NavigationProtocol, ObservableObject {
     
     init(
         album: AlbumsResponse,
-        navigationDelegate: AdlbumDetailsNavigationDelegate?,
+        navigationDelegate: PhotosNavigationDelegate?,
         backDelegate: BackDelegate?,
         cancellables: Set<AnyCancellable> = Set<AnyCancellable>()
     ) {
@@ -39,7 +39,7 @@ class AlbumDetailsViewModel: ViewModable, NavigationProtocol, ObservableObject {
     @MainActor func getPhotos() async {
         loadingState = .loading
         do {
-            let photos = try await AlbumsService.getPhotos(albumId: album.id ?? 0).Request(model: [PhotoResponse].self)
+            let photos = try await PhotosService.getPhotos(albumId: album.id ?? 0).Request(model: [PhotoResponse].self)
             self.photos = photos
             loadingState = .populated
         } catch let error {

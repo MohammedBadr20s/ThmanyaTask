@@ -1,5 +1,5 @@
 //
-//  AlbumDetailsHostingVC.swift
+//  AlbumsViewHostingVC.swift
 //  ThmanyaTask
 //
 //  Created by Mohammedbadr on 3/13/24.
@@ -7,17 +7,17 @@
 
 import SwiftUI
 
-protocol PhotosNavigationDelegate: AnyObject {
-    func presentFullScreenPhoto(url: URL)
+protocol AlbumsNavigationDelegate: AnyObject {
+    func navigateToAlbumDetails(album: AlbumsResponse)
 }
 
-class PhotosHostingVC: UIHostingController<PhotosView> {
+class AlbumsViewHostingVC: UIHostingController<AlbumsView> {
+    let viewModel: AlbumsViewModel
     
-    let viewModel: PhotosViewModel
     
-    init(viewModel: PhotosViewModel) {
+    init(viewModel: AlbumsViewModel) {
         self.viewModel = viewModel
-        super.init(rootView: PhotosView(viewModel: viewModel))
+        super.init(rootView: AlbumsView(viewModel: viewModel))
     }
     
     @objc required dynamic init?(coder aDecoder: NSCoder) {
@@ -28,5 +28,5 @@ class PhotosHostingVC: UIHostingController<PhotosView> {
         super.viewDidLoad()
         self.navigationController?.setNavigationSettings(navigationType: .default)
     }
-
+    
 }
